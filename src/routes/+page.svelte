@@ -17,6 +17,10 @@
   let isTracking = $state(false)
   let lastVideoTime = $state(-1)
 
+  let cursorX = $state(0)
+  let mirroredCursorX = $derived(window.innerWidth - cursorX)
+  let cursorY = $state(0)
+
   async function initHandTracker() {
     const vision = await FilesetResolver.forVisionTasks(
       'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm'
@@ -108,10 +112,8 @@
         const normalizedX = (midpointX - offsetX) / scaleX
         const normalizedY = (midpointY - offsetY) / scaleY
 
-        const cursorX = normalizedX * window.innerWidth
-        const cursorY = normalizedY * window.innerHeight
-
-        moveCursor(cursorX, cursorY)
+        cursorX = normalizedX * window.innerWidth
+        cursorY = normalizedY * window.innerHeight
       }
     })
   }
@@ -157,11 +159,6 @@
         ctx.stroke()
       }
     })
-  }
-
-  function moveCursor(x: number, y: number) {
-    cursorElement!.style.left = `${window.innerWidth - x}px`
-    cursorElement!.style.top = `${y}px`
   }
 
   async function startWebcam() {
@@ -233,6 +230,8 @@
     <div
       bind:this={cursorElement}
       class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+      style:left={`${mirroredCursorX}px`}
+      style:top={`${cursorY}px`}
     ></div>
   {/if}
 </div>
