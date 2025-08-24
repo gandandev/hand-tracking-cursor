@@ -192,10 +192,6 @@
       console.error('Error starting webcam or hand tracking:', error)
     }
   }
-
-  function stopTracking() {
-    isTracking = false
-  }
 </script>
 
 <div class="relative h-screen w-full">
