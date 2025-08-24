@@ -225,7 +225,7 @@
 
     <canvas
       bind:this={canvasElement}
-      class="pointer-events-none absolute h-full w-full -scale-x-100 object-cover"
+      class="pointer-events-none absolute hidden h-full w-full -scale-x-100 object-cover"
     ></canvas>
 
     {#if isHandVisible}
