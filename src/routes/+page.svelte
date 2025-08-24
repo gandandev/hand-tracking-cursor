@@ -65,7 +65,7 @@
       drawConnections(ctx, landmarks)
 
       // Draw individual landmarks
-      landmarks.forEach((landmark, index) => {
+      landmarks.forEach((landmark) => {
         const x = landmark.x * canvasElement!.width
         const y = landmark.y * canvasElement!.height
 
