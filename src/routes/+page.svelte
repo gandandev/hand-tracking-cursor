@@ -75,7 +75,8 @@
         ctx.fill()
       })
 
-      if (landmarks[8]) {
+      if (landmarks[8] && landmarks[4]) {
+        // Thumb and index finger tip
         const videoAspect = videoSource!.videoWidth / videoSource!.videoHeight
         const screenAspect = window.innerWidth / window.innerHeight
 
@@ -96,13 +97,21 @@
           offsetY = (1 - scaleY) / 2
         }
 
-        const normalizedX = (landmarks[8].x - offsetX) / scaleX
-        const normalizedY = (landmarks[8].y - offsetY) / scaleY
+        const thumbX = landmarks[4].x
+        const thumbY = landmarks[4].y
+        const indexFingerX = landmarks[8].x
+        const indexFingerY = landmarks[8].y
 
-        const cursorX = normalizedX * window.innerWidth
-        const cursorY = normalizedY * window.innerHeight
+        const cursorX = (thumbX + indexFingerX) / 2
+        const cursorY = (thumbY + indexFingerY) / 2
 
-        moveCursor(cursorX, cursorY)
+        const normalizedX = (cursorX - offsetX) / scaleX
+        const normalizedY = (cursorY - offsetY) / scaleY
+
+        const finalCursorX = normalizedX * window.innerWidth
+        const finalCursorY = normalizedY * window.innerHeight
+
+        moveCursor(finalCursorX, finalCursorY)
       }
     })
   }
