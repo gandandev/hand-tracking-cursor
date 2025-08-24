@@ -36,7 +36,11 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
       "esbuild"
     ]
+  },
+  "dependencies": {
+    "@tabler/icons-svelte": "^3.34.1"
   }
 }
