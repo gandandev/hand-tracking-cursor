@@ -18,8 +18,10 @@
   let lastVideoTime = $state(-1)
 
   let cursorX = $state(0)
-  let mirroredCursorX = $derived(window.innerWidth - cursorX)
+  let mirroredCursorX = $derived(typeof window !== 'undefined' ? window.innerWidth - cursorX : 0)
   let cursorY = $state(0)
+  let pinchLength = $state(0)
+  let clicking = $derived(pinchLength < 0.04)
 
   async function initHandTracker() {
     const vision = await FilesetResolver.forVisionTasks(
@@ -105,6 +107,8 @@
         const thumbY = landmarks[4].y
         const indexFingerX = landmarks[8].x
         const indexFingerY = landmarks[8].y
+
+        pinchLength = Math.hypot(thumbX - indexFingerX, thumbY - indexFingerY)
 
         const midpointX = (thumbX + indexFingerX) / 2
         const midpointY = (thumbY + indexFingerY) / 2
@@ -229,9 +233,16 @@
 
     <div
       bind:this={cursorElement}
-      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white duration-100"
+      class:scale-70={clicking}
+      class:opacity-50={!clicking}
       style:left={`${mirroredCursorX}px`}
       style:top={`${cursorY}px`}
     ></div>
+
+    <div class="absolute right-0 bottom-1 left-0 flex flex-col items-center">
+      <span>Pinch length: {pinchLength}</span>
+      <div class="h-1 rounded-full bg-white" style:width={`${pinchLength * 100}%`}></div>
+    </div>
   {/if}
 </div>
