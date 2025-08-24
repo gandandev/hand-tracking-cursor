@@ -16,6 +16,7 @@
   let isTracking = $state(false)
   let lastVideoTime = $state(-1)
 
+  let isHandVisible = $state(false)
   let cursorX = $state(0)
   let mirroredCursorX = $derived(typeof window !== 'undefined' ? window.innerWidth - cursorX : 0)
   let cursorY = $state(0)
@@ -52,6 +53,7 @@
     lastVideoTime = videoTime
 
     const results = handLandmarker.detectForVideo(videoSource, videoTime)
+    isHandVisible = results.landmarks.some((landmarks) => landmarks.length > 0)
     drawHandLandmarks(results)
 
     if (isTracking) {
@@ -230,13 +232,15 @@
       class="pointer-events-none absolute h-full w-full -scale-x-100 object-cover"
     ></canvas>
 
-    <div
-      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-[scale,opacity] duration-300"
-      class:scale-70={clicking}
-      class:opacity-50={!clicking}
-      style:left={`${mirroredCursorX}px`}
-      style:top={`${cursorY}px`}
-    ></div>
+    {#if isHandVisible}
+      <div
+        class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-[scale,opacity] duration-300"
+        class:scale-70={clicking}
+        class:opacity-50={!clicking}
+        style:left={`${mirroredCursorX}px`}
+        style:top={`${cursorY}px`}
+      ></div>
+    {/if}
 
     <div class="absolute right-0 bottom-1 left-0 flex flex-col items-center">
       <span>Pinch length: {pinchLength}</span>
