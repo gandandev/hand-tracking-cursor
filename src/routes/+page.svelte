@@ -76,9 +76,31 @@
       })
 
       if (landmarks[8]) {
-        // index finger tip
-        const cursorX = landmarks[8].x * window.innerWidth
-        const cursorY = landmarks[8].y * window.innerHeight
+        const videoAspect = videoSource!.videoWidth / videoSource!.videoHeight
+        const screenAspect = window.innerWidth / window.innerHeight
+
+        let scaleX,
+          scaleY,
+          offsetX = 0,
+          offsetY = 0
+
+        if (videoAspect > screenAspect) {
+          // left/right cropped
+          scaleY = 1
+          scaleX = screenAspect / videoAspect
+          offsetX = (1 - scaleX) / 2
+        } else {
+          // top/bottom cropped
+          scaleX = 1
+          scaleY = videoAspect / screenAspect
+          offsetY = (1 - scaleY) / 2
+        }
+
+        const normalizedX = (landmarks[8].x - offsetX) / scaleX
+        const normalizedY = (landmarks[8].y - offsetY) / scaleY
+
+        const cursorX = normalizedX * window.innerWidth
+        const cursorY = normalizedY * window.innerHeight
 
         moveCursor(cursorX, cursorY)
       }
@@ -196,9 +218,12 @@
 
     <canvas
       bind:this={canvasElement}
-      class="pointer-events-none absolute top-0 left-0 h-full w-full -scale-x-100"
+      class="pointer-events-none absolute h-full w-full -scale-x-100 object-cover"
     ></canvas>
 
-    <div bind:this={cursorElement} class="absolute size-6 rounded-full bg-white"></div>
+    <div
+      bind:this={cursorElement}
+      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white"
+    ></div>
   {/if}
 </div>
