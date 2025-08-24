@@ -11,7 +11,6 @@
   let loadingWebcam = $state(true)
   let videoSource: HTMLVideoElement | null = $state(null)
   let canvasElement: HTMLCanvasElement | null = $state(null)
-  let cursorElement: HTMLDivElement | null = $state(null)
 
   let handLandmarker: HandLandmarker | null = $state(null)
   let isTracking = $state(false)
@@ -232,7 +231,6 @@
     ></canvas>
 
     <div
-      bind:this={cursorElement}
       class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-[scale,opacity] duration-300"
       class:scale-70={clicking}
       class:opacity-50={!clicking}
