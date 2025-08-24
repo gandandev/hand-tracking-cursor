@@ -86,12 +86,12 @@
           offsetY = 0
 
         if (videoAspect > screenAspect) {
-          // left/right cropped
+          // Left/right cropped
           scaleY = 1
           scaleX = screenAspect / videoAspect
           offsetX = (1 - scaleX) / 2
         } else {
-          // top/bottom cropped
+          // Top/bottom cropped
           scaleX = 1
           scaleY = videoAspect / screenAspect
           offsetY = (1 - scaleY) / 2
@@ -102,16 +102,16 @@
         const indexFingerX = landmarks[8].x
         const indexFingerY = landmarks[8].y
 
-        const cursorX = (thumbX + indexFingerX) / 2
-        const cursorY = (thumbY + indexFingerY) / 2
+        const midpointX = (thumbX + indexFingerX) / 2
+        const midpointY = (thumbY + indexFingerY) / 2
 
-        const normalizedX = (cursorX - offsetX) / scaleX
-        const normalizedY = (cursorY - offsetY) / scaleY
+        const normalizedX = (midpointX - offsetX) / scaleX
+        const normalizedY = (midpointY - offsetY) / scaleY
 
-        const finalCursorX = normalizedX * window.innerWidth
-        const finalCursorY = normalizedY * window.innerHeight
+        const cursorX = normalizedX * window.innerWidth
+        const cursorY = normalizedY * window.innerHeight
 
-        moveCursor(finalCursorX, finalCursorY)
+        moveCursor(cursorX, cursorY)
       }
     })
   }
