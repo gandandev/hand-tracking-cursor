@@ -233,7 +233,7 @@
 
     <div
       bind:this={cursorElement}
-      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white duration-100"
+      class="absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white transition-[scale,opacity] duration-300"
       class:scale-70={clicking}
       class:opacity-50={!clicking}
       style:left={`${mirroredCursorX}px`}
