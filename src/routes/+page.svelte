@@ -21,7 +21,23 @@
   let mirroredCursorX = $derived(typeof window !== 'undefined' ? window.innerWidth - cursorX : 0)
   let cursorY = $state(0)
   let pinchLength = $state(0)
-  let clicking = $derived(pinchLength < 0.04)
+  let clickThreshold = $state(0.04) // 기본값
+  let clicking = $derived(pinchLength < clickThreshold)
+
+  let inCalibrationMode = $state(false)
+  let corners = $state([
+    { name: 'top-left', x: 0, y: 0, threshold: 0 },
+    { name: 'top-right', x: 0, y: 0, threshold: 0 },
+    { name: 'bottom-left', x: 0, y: 0, threshold: 0 },
+    { name: 'bottom-right', x: 0, y: 0, threshold: 0 }
+  ])
+  let currentCornerIndex = $state(0)
+  let calibrationPinchLengths = $state<number[]>([])
+  let calibrationProgress = $state(0)
+  let holdStartTime = $state(0)
+  let isHolding = $state(false)
+  const HOLD_DURATION = 1000
+  let calibrationComplete = $state(false)
 
   async function initHandTracker() {
     const vision = await FilesetResolver.forVisionTasks(
@@ -53,7 +69,16 @@
     lastVideoTime = videoTime
 
     const results = handLandmarker.detectForVideo(videoSource, videoTime)
+    const previousHandVisible = isHandVisible
     isHandVisible = results.landmarks.some((landmarks) => landmarks.length > 0)
+
+    // Reset calibration state if hand is not visible
+    if (previousHandVisible && !isHandVisible && inCalibrationMode && isHolding) {
+      isHolding = false
+      calibrationProgress = 0
+      calibrationPinchLengths = []
+    }
+
     drawHandLandmarks(results)
 
     if (isTracking) {
@@ -119,8 +144,65 @@
 
         cursorX = normalizedX * window.innerWidth
         cursorY = normalizedY * window.innerHeight
+
+        if (inCalibrationMode && !calibrationComplete && currentCornerIndex < corners.length) {
+          handleCalibration()
+        }
       }
     })
+  }
+
+  function handleCalibration() {
+    const now = Date.now()
+
+    if (!isHolding) {
+      // Start calibration automatically
+      isHolding = true
+      holdStartTime = now
+      calibrationPinchLengths = []
+      calibrationProgress = 0
+    } else {
+      const elapsed = now - holdStartTime
+      calibrationProgress = Math.min(elapsed / HOLD_DURATION, 1)
+
+      calibrationPinchLengths.push(pinchLength)
+
+      if (elapsed >= HOLD_DURATION) {
+        completeCurrentCornerCalibration()
+      }
+    }
+  }
+
+  function completeCurrentCornerCalibration() {
+    if (calibrationPinchLengths.length > 0) {
+      // Set threshold to average pinch length + 0.01
+      const avgPinchLength =
+        calibrationPinchLengths.reduce((a, b) => a + b, 0) / calibrationPinchLengths.length
+      const threshold = avgPinchLength + 0.01
+
+      corners[currentCornerIndex] = {
+        ...corners[currentCornerIndex],
+        x: cursorX,
+        y: cursorY,
+        threshold: threshold
+      }
+
+      currentCornerIndex++
+
+      if (currentCornerIndex >= corners.length) {
+        // Calibration complete
+        calibrationComplete = true
+        inCalibrationMode = false
+
+        const avgThreshold =
+          corners.reduce((sum, corner) => sum + corner.threshold, 0) / corners.length
+        clickThreshold = avgThreshold
+      }
+    }
+
+    isHolding = false
+    calibrationProgress = 0
+    calibrationPinchLengths = []
   }
 
   function drawConnections(ctx: CanvasRenderingContext2D, landmarks: any[]) {
@@ -188,6 +270,8 @@
       loadingWebcam = false
       isTracking = true
       detectHands()
+
+      inCalibrationMode = true
     } catch (error) {
       console.error('Error starting webcam or hand tracking:', error)
     }
@@ -212,6 +296,31 @@
       </button>
     </div>
   {:else}
+    {#if inCalibrationMode}
+      <div
+        class="absolute z-50 flex h-screen w-full flex-col items-center justify-center bg-black/50 text-center text-white/50"
+      >
+        {#if isHandVisible}
+          <div class="space-y-4">
+            <span
+              class="calibration-text block text-2xl font-semibold text-white"
+              class:holding={isHolding}
+              style="--progress: {calibrationProgress * 100}%"
+            >
+              {#if currentCornerIndex < corners.length}
+                Pinch and hold your hand at {corners[currentCornerIndex].name} corner for {HOLD_DURATION /
+                  1000}s
+              {:else}
+                Calibration complete!
+              {/if}
+            </span>
+          </div>
+        {:else}
+          <span class="text-2xl font-semibold">Raise your hand to the camera</span>
+        {/if}
+      </div>
+    {/if}
+
     <!-- svelte-ignore a11y_media_has_caption -->
     <video
       bind:this={videoSource}
@@ -244,3 +353,23 @@
     </div>
   {/if}
 </div>
+
+<style>
+  .calibration-text {
+    background: linear-gradient(
+      to right,
+      white 0%,
+      white var(--progress, 0%),
+      rgba(255, 255, 255, 0.5) var(--progress, 0%),
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: background 0.1s ease-out;
+  }
+
+  .calibration-text.holding {
+    animation: none;
+  }
+</style>
