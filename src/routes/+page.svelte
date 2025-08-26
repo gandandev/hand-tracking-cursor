@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { fly } from 'svelte/transition'
+  import { fade, fly } from 'svelte/transition'
   import { cubicIn } from 'svelte/easing'
   import {
     HandLandmarker,
     FilesetResolver,
     type HandLandmarkerResult
   } from '@mediapipe/tasks-vision'
+  import TextTransition from '$lib/components/TextTransition.svelte'
 
   let showStartScreen = $state(true)
   let loadingWebcam = $state(true)
@@ -21,7 +22,7 @@
   let mirroredCursorX = $derived(typeof window !== 'undefined' ? window.innerWidth - cursorX : 0)
   let cursorY = $state(0)
   let pinchLength = $state(0)
-  let clickThreshold = $state(0.04) // 기본값
+  let clickThreshold = $state(1)
   let clicking = $derived(pinchLength < clickThreshold)
 
   let inCalibrationMode = $state(false)
@@ -36,7 +37,7 @@
   let calibrationProgress = $state(0)
   let holdStartTime = $state(0)
   let isHolding = $state(false)
-  const HOLD_DURATION = 1000
+  const HOLD_DURATION = 3000
   let calibrationComplete = $state(false)
 
   async function initHandTracker() {
@@ -299,25 +300,24 @@
     {#if inCalibrationMode}
       <div
         class="absolute z-50 flex h-screen w-full flex-col items-center justify-center bg-black/50 text-center text-white/50"
+        in:fade={{ duration: 300 }}
+        out:fade={{ duration: 300, delay: 1000 }}
       >
-        {#if isHandVisible}
-          <div class="space-y-4">
+        <TextTransition value={isHandVisible ? `corner-${currentCornerIndex}` : 'no-hand'}>
+          {#if isHandVisible}
             <span
-              class="calibration-text block text-2xl font-semibold text-white"
+              class="calibration-text block text-2xl font-semibold"
               class:holding={isHolding}
               style="--progress: {calibrationProgress * 100}%"
             >
-              {#if currentCornerIndex < corners.length}
-                Pinch and hold your hand at {corners[currentCornerIndex].name} corner for {HOLD_DURATION /
-                  1000}s
-              {:else}
-                Calibration complete!
-              {/if}
+              Pinch and hold your hand at <b>{corners[currentCornerIndex].name}</b>
+              corner for
+              {HOLD_DURATION / 1000}s
             </span>
-          </div>
-        {:else}
-          <span class="text-2xl font-semibold">Raise your hand to the camera</span>
-        {/if}
+          {:else}
+            <span class="text-2xl font-semibold">Raise your hand to the camera</span>
+          {/if}
+        </TextTransition>
       </div>
     {/if}
 
