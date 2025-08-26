@@ -7,6 +7,7 @@
     type HandLandmarkerResult
   } from '@mediapipe/tasks-vision'
   import TextTransition from '$lib/components/TextTransition.svelte'
+  import { IconCheck } from '@tabler/icons-svelte'
 
   let showStartScreen = $state(true)
   let loadingWebcam = $state(true)
@@ -193,6 +194,9 @@
       if (currentCornerIndex >= corners.length) {
         // Calibration complete
         calibrationComplete = true
+        setTimeout(() => {
+          calibrationComplete = false
+        }, 1000)
         inCalibrationMode = false
 
         const avgThreshold =
@@ -297,20 +301,29 @@
       </button>
     </div>
   {:else}
-    {#if inCalibrationMode}
+    {#if inCalibrationMode || calibrationComplete}
       <div
         class="absolute z-50 flex h-screen w-full flex-col items-center justify-center bg-black/50 text-center text-white/50"
-        in:fade={{ duration: 300 }}
-        out:fade={{ duration: 300, delay: 1000 }}
+        transition:fade={{ duration: 300 }}
       >
-        <TextTransition value={isHandVisible ? `corner-${currentCornerIndex}` : 'no-hand'}>
-          {#if isHandVisible}
+        <TextTransition
+          value={calibrationComplete
+            ? 'complete'
+            : isHandVisible
+              ? `corner-${currentCornerIndex}`
+              : 'no-hand'}
+        >
+          {#if calibrationComplete}
+            <IconCheck class="mx-auto block size-20" />
+          {:else if isHandVisible}
             <span
               class="calibration-text block text-2xl font-semibold"
               class:holding={isHolding}
               style="--progress: {calibrationProgress * 100}%"
             >
-              Pinch and hold your hand at <b>{corners[currentCornerIndex].name}</b>
+              Pinch and hold your hand at <b
+                >{corners[Math.min(currentCornerIndex, corners.length - 1)].name}</b
+              >
               corner for
               {HOLD_DURATION / 1000}s
             </span>
